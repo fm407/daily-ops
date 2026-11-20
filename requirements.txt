@@ -1,0 +1,4 @@
+requests>=2.31
+pyyaml>=6.0
+# optional, only for the workbook source:
+# openpyxl>=3.1

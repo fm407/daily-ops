@@ -1,0 +1,159 @@
+# daily-ops configuration. Copy to ./daily-ops.yaml in the directory you run Claude Code from,
+# or anywhere else and point $DAILY_OPS_CONFIG at it. Secrets never go in this file: each
+# *_env key names the environment variable that holds the secret (see .env.example).
+
+python: python3              # interpreter with requirements.txt installed, e.g. /path/to/.venv/bin/python
+output_dir: daily-ops-out    # digests, drafts and decisions; relative to this file's directory
+lookback_days: 1
+monday_lookback_days: 3      # Monday looks back over the weekend
+
+# Days allowed to fix a finding, counted from the day it was first reported. The due date of a
+# ticket follows the highest severity still open on it.
+sla_days:
+  Critical: 7
+  High: 30
+  Medium: 90
+  Low: 180
+sla_ignore: []               # severities with no SLA, e.g. [Info]; any other unknown severity is an error
+
+# How drafts are written. All optional.
+style:
+  avoid_em_dashes: false     # true: drafts use commas, colons or full stops instead
+  tone: ""                   # e.g. "short plain paragraphs, cordial, not over-technical"
+  extra_rules: []            # e.g. ["British spelling", "no headings in emails"]
+
+drafts:
+  open_command: ""           # e.g. "open" (macOS) or "xdg-open" (Linux) to open each draft; empty: do not
+
+# Claude.ai connectors (signed in through /mcp, not API keys). Set true for the ones you use.
+connectors:
+  email: false               # e.g. Gmail
+  calendar: false            # e.g. Google Calendar
+  chat: false                # e.g. Slack
+  require: true              # true: stop the run until every enabled connector is connected
+
+# The board the sec-review skill walks. Uses the sources.jira connection below.
+security_board:
+  project: SECOPS
+  review_statuses: ["Ready for Review", "In Review"]   # tickets waiting for verification
+  in_progress_status: "In Progress"                    # where a failed verification sends a ticket
+  done_transition: "Done"                              # transition name used to close a ticket
+  due_date_field: duedate                              # or customfield_XXXXX
+  severity_field: ""                                   # customfield_XXXXX; empty: the Priority field
+  verified_on_field: ""                                # customfield_XXXXX (a date field); empty: not used
+  stale_days: 14
+  done_lookback_days: 30
+  ignore_comment_authors: ["Automation for Jira"]
+
+sources:
+  # ---------- Tickets ----------
+  jira:
+    enabled: false
+    base_url: https://your-site.atlassian.net
+    auth: basic              # basic: email + API token. bearer: token only (set base_url to match)
+    email_env: JIRA_EMAIL
+    token_env: JIRA_API_TOKEN
+    due_date_field: duedate
+    # Approved writes are only allowed in security_board.project and the projects listed here.
+    writable_projects: []    # e.g. [HELP]
+    # {days} becomes the lookback. currentUser() is the account the token belongs to.
+    queries:
+      - title: Ready for review
+        jql: 'project = SECOPS AND status = "Ready for Review" ORDER BY updated'
+      - title: Overdue or due within 7 days
+        jql: "project = SECOPS AND statusCategory != Done AND duedate <= 7d ORDER BY duedate"
+      - title: New tickets
+        jql: "project = SECOPS AND created >= -{days}d ORDER BY created"
+      - title: Service desk tickets assigned to you
+        jql: "project = HELP AND statusCategory != Done AND assignee = currentUser()"
+    # Tickets listed when their latest comment is not yours.
+    waiting_jql: "(project = SECOPS OR assignee = currentUser() OR reporter = currentUser()) AND statusCategory != Done AND updated >= -{days}d ORDER BY updated DESC"
+
+  # ---------- Code ----------
+  github:
+    enabled: false
+    base_url: https://api.github.com
+    token_env: GITHUB_TOKEN  # read access to pull requests and security alerts
+    username: your-username
+    org: your-org
+    checks: [reviews, dependabot, code_scanning]
+
+  gitlab:
+    enabled: false
+    base_url: https://gitlab.com
+    token_env: GITLAB_TOKEN  # read_api scope
+    username: your-username  # reviewer to look for
+    group: your-group        # full path, for vulnerabilities and tokens
+    # vulnerabilities needs GitLab Ultimate; tokens needs a token whose user is an Owner of the group
+    checks: [reviews, vulnerabilities, tokens]
+    token_expiry_days: 14
+
+  snyk:
+    enabled: false
+    base_url: https://api.snyk.io            # your region, e.g. https://api.eu.snyk.io
+    token_env: SNYK_TOKEN
+    org_id: "00000000-0000-0000-0000-000000000000"   # the organisation's UUID
+
+  # ---------- Endpoints ----------
+  crowdstrike:
+    enabled: false
+    base_url: https://api.crowdstrike.com   # your cloud, e.g. https://api.us-2.crowdstrike.com
+    client_id_env: CROWDSTRIKE_CLIENT_ID    # API client with the Alerts: Read scope
+    client_secret_env: CROWDSTRIKE_CLIENT_SECRET
+
+  intune:
+    enabled: false           # app registration with DeviceManagementManagedDevices.Read.All (application)
+    tenant_id_env: INTUNE_TENANT_ID
+    client_id_env: INTUNE_CLIENT_ID
+    client_secret_env: INTUNE_CLIENT_SECRET
+
+  jumpcloud:
+    enabled: false
+    base_url: https://console.jumpcloud.com   # EU tenants: https://console.eu.jumpcloud.com
+    api_key_env: JUMPCLOUD_API_KEY   # a read-only admin key is enough
+    stale_days: 3
+
+  # ---------- Identity ----------
+  okta:
+    enabled: false
+    base_url: https://your-org.okta.com
+    token_env: OKTA_API_TOKEN        # a read-only admin token is enough
+    checks: [mfa, status]            # mfa makes one request per active user
+    max_users: 200                   # most active users the mfa check will look at
+
+  # ---------- Cloud ----------
+  aws_securityhub:
+    enabled: false           # uses your aws CLI credentials, no API key here
+    profile: ""              # optional named profile
+    region: ""               # optional, e.g. eu-west-1 (the aggregation region if you have one)
+
+  gcp_scc:
+    enabled: false           # uses your gcloud login, no API key
+    organization_id: "000000000000"
+    billing_project: ""      # optional quota project
+    watch_categories: []     # report while still active, e.g. [MFA_NOT_ENFORCED]
+
+  # ---------- Training ----------
+  knowbe4:
+    enabled: false
+    base_url: https://us.api.knowbe4.com    # your region's reporting API
+    token_env: KNOWBE4_API_TOKEN
+
+  # ---------- DNS ----------
+  dnsfilter:
+    enabled: false
+    token_env: DNSFILTER_API_TOKEN
+    organization_id: 0
+
+  # ---------- Compliance workbook (optional) ----------
+  # Also switches on the skills' "propose a workbook update" step.
+  workbook:
+    enabled: false
+    path: /path/to/controls.xlsx   # .xlsx only; a relative path is taken from this file's directory
+    sheet: Controls
+    header_rows: 1
+    control_column: A        # control id; rows without one are ignored
+    status_column: H
+    target_date_column: G
+    notes_column: I          # where approved, dated update lines are appended
+    closed_values: [closed, done]   # a status starting with one of these is closed

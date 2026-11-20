@@ -1,0 +1,35 @@
+[
+  {"match": "/rest/api/3/myself", "response": {"accountId": "demo-me"}},
+  {"match": "Ready for Review", "response": {"issues": [
+    {"key": "SECOPS-1", "fields": {"summary": "Upgrade the TLS library in the billing service", "status": {"name": "Ready for Review"}, "assignee": {"displayName": "Sam Rivera"}, "duedate": "2026-01-20"}},
+    {"key": "SECOPS-4", "fields": {"summary": "Rotate the CI deploy token", "status": {"name": "Ready for Review"}, "assignee": {"displayName": "Jo Park"}, "duedate": "2026-01-28"}}
+  ]}},
+  {"match": "duedate <= 7d", "response": {"issues": [
+    {"key": "SECOPS-2", "fields": {"summary": "Close the public storage bucket listing", "status": {"name": "In Progress"}, "assignee": {"displayName": "Jo Park"}, "duedate": "2026-01-02"}}
+  ]}},
+  {"match": "created >=", "response": {"issues": [
+    {"key": "SECOPS-5", "fields": {"summary": "Dependency scan: 1 critical, 3 high in web-frontend", "status": {"name": "Backlog"}, "assignee": null, "duedate": null}}
+  ]}},
+  {"match": "updated >=", "response": {"issues": [
+    {"key": "SECOPS-3", "fields": {"summary": "Enforce MFA for the admin console", "status": {"name": "In Progress"}, "assignee": {"displayName": "Sam Rivera"},
+      "comment": {"comments": [{"id": "101", "created": "2026-01-04T16:12:00.000+0000", "author": {"accountId": "demo-sam", "displayName": "Sam Rivera"},
+        "body": {"type": "doc", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Rolled out to the admin group. Can the two service accounts stay exempt until Friday?"}]}]}}]}}}
+  ]}},
+  {"match": "/search/issues", "response": {"items": [
+    {"title": "Pin base images by digest", "user": {"login": "jo-park"}, "html_url": "https://github.com/example-org/web-frontend/pull/42"}
+  ]}},
+  {"match": "/dependabot/alerts", "response": [
+    {"security_advisory": {"severity": "critical", "summary": "Prototype pollution in example-merge"}, "repository": {"name": "web-frontend"}, "html_url": "https://github.com/example-org/web-frontend/security/dependabot/7"},
+    {"security_advisory": {"severity": "high", "summary": "Request smuggling in example-http"}, "repository": {"name": "billing-service"}, "html_url": "https://github.com/example-org/billing-service/security/dependabot/3"}
+  ]},
+  {"match": "/code-scanning/alerts severity=critical", "response": []},
+  {"match": "/code-scanning/alerts", "response": [
+    {"rule": {"security_severity_level": "high", "description": "SQL query built from user-controlled input"}, "repository": {"name": "billing-service"}, "html_url": "https://github.com/example-org/billing-service/security/code-scanning/12"}
+  ]},
+  {"match": "console.jumpcloud.com/api/systems", "response": {"results": [
+    {"hostname": "mbp-alex", "os": "Mac OS X", "active": false, "lastContact": "2026-01-01T08:15:00Z", "fde": {"active": true}},
+    {"hostname": "thinkpad-jo", "os": "Windows", "active": true, "lastContact": "__NOW__", "fde": {"active": false}},
+    {"hostname": "mbp-sam", "os": "Mac OS X", "active": true, "lastContact": "__NOW__", "fde": {"active": true}},
+    {"hostname": "mbp-robin", "os": "Mac OS X", "active": true, "lastContact": "__NOW__", "fde": {"active": true}}
+  ]}}
+]

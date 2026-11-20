@@ -1,0 +1,8 @@
+{
+  "name": "daily-ops",
+  "version": "0.1.0",
+  "description": "Morning triage for security and IT operations: collect from your ticket boards and security tools, propose actions, ask item by item, act only on approval.",
+  "author": { "name": "fm407" },
+  "license": "MIT",
+  "keywords": ["security", "it-operations", "triage", "jira", "compliance"]
+}

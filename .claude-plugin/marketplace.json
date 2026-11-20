@@ -1,0 +1,14 @@
+{
+  "name": "daily-ops",
+  "owner": { "name": "fm407" },
+  "metadata": {
+    "description": "Morning triage and security board review for security and IT operations in Claude Code."
+  },
+  "plugins": [
+    {
+      "name": "daily-ops",
+      "source": "./",
+      "description": "Morning triage for security and IT operations, with item-by-item approval before anything changes."
+    }
+  ]
+}

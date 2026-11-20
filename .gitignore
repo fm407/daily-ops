@@ -1,0 +1,13 @@
+.env
+daily-ops.yaml
+daily-ops-out/
+decisions.json
+dropped.json
+__pycache__/
+.DS_Store
+*.backup-*.xlsx
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+scripts/demo/out/
